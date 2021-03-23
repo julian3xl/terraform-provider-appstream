@@ -86,14 +86,16 @@ func resourceAppstreamFleet() *schema.Resource {
 				Optional: true,
 			},
 
-			"image_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+			//"image_arn": {
+			//	Type:          schema.TypeString,
+			//	Optional:      true,
+			//	ConflictsWith: []string{"image_name"},
+			//},
 
 			"image_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				//ConflictsWith: []string{"image_arn"},
 			},
 
 			"instance_type": {
@@ -210,9 +212,9 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 		CreateFleetInputOpts.IdleDisconnectTimeoutInSeconds = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("image_arn"); ok {
-		CreateFleetInputOpts.ImageArn = aws.String(v.(string))
-	}
+	//if v, ok := d.GetOk("image_arn"); ok {
+	//	CreateFleetInputOpts.ImageArn = aws.String(v.(string))
+	//}
 
 	if v, ok := d.GetOk("image_name"); ok {
 		CreateFleetInputOpts.ImageName = aws.String(v.(string))
@@ -382,7 +384,7 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 			d.Set("fleet_type", v.FleetType)
 			d.Set("iam_role_arn", v.IamRoleArn)
 			d.Set("idle_disconnect_timeout", v.IdleDisconnectTimeoutInSeconds)
-			d.Set("image_arn", v.ImageArn)
+			//d.Set("image_arn", v.ImageArn)
 			d.Set("image_name", v.ImageName)
 			d.Set("instance_type", v.InstanceType)
 			d.Set("max_user_duration", v.MaxUserDurationInSeconds)
@@ -479,12 +481,12 @@ func resourceAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) erro
 		UpdateFleetInputOpts.IdleDisconnectTimeoutInSeconds = aws.Int64(int64(idle_disconnect_timeout_in_seconds))
 	}
 
-	if d.HasChange("image_arn") {
-		d.SetPartial("image_arn")
-		log.Printf("[DEBUG] Modify Fleet")
-		image_arn := d.Get("image_arn").(string)
-		UpdateFleetInputOpts.ImageArn = aws.String(image_arn)
-	}
+	//if d.HasChange("image_arn") {
+	//	d.SetPartial("image_arn")
+	//	log.Printf("[DEBUG] Modify Fleet")
+	//	image_arn := d.Get("image_arn").(string)
+	//	UpdateFleetInputOpts.ImageArn = aws.String(image_arn)
+	//}
 
 	if d.HasChange("image_name") {
 		d.SetPartial("image_name")
