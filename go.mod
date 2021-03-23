@@ -1,4 +1,4 @@
-module github.com/arnvid/terraform-provider-appstream
+module github.com/julian3xl/terraform-provider-appstream
 
 go 1.14
 
