@@ -628,15 +628,17 @@ func resourceAppstreamFleetDelete(d *schema.ResourceData, meta interface{}) erro
 
 	}
 
-	dis, err := svc.DisassociateFleet(&appstream.DisassociateFleetInput{
-		FleetName: aws.String(d.Id()),
-		StackName: aws.String(d.Get("stack_name").(string)),
-	})
-	if err != nil {
-		log.Printf("[ERROR] Error deleting Appstream Fleet: %s", err)
-		return err
+	if v, ok := d.GetOk("stack_name"); ok {
+		dis, err := svc.DisassociateFleet(&appstream.DisassociateFleetInput{
+			FleetName: aws.String(d.Id()),
+			StackName: aws.String(v.(string)),
+		})
+		if err != nil {
+			log.Printf("[ERROR] Error deleting Appstream Fleet: %s", err)
+			return err
+		}
+		log.Printf("[DEBUG] %s", dis)
 	}
-	log.Printf("[DEBUG] %s", dis)
 
 	del, err := svc.DeleteFleet(&appstream.DeleteFleetInput{
 		Name: aws.String(d.Id()),
