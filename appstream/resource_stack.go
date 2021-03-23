@@ -1,11 +1,12 @@
 package appstream
 
 import (
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-        "log"
-        "time"
 )
 
 func resourceAppstreamStack() *schema.Resource {
@@ -56,12 +57,14 @@ func resourceAppstreamStack() *schema.Resource {
 					},
 				},
 			},
+
 			"tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
+
 			"user_settings": {
-				Type: schema.TypeSet,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -336,35 +339,35 @@ func expandUserSettingConfigs(userSettingConfigs []interface{}) []*appstream.Use
 		configAllowLocalPrint := configAttributes["allow_local_device_printing"].(string)
 		if configAttributes["file_download"] != nil {
 			config := &appstream.UserSetting{
-				Action: aws.String("FILE_DOWNLOAD"),
+				Action:     aws.String("FILE_DOWNLOAD"),
 				Permission: aws.String(configFileDownload),
 			}
 			userSettingConfig = append(userSettingConfig, config)
 		}
 		if configAttributes["file_upload"] != nil {
 			config := &appstream.UserSetting{
-				Action: aws.String("FILE_UPLOAD"),
+				Action:     aws.String("FILE_UPLOAD"),
 				Permission: aws.String(configFileUpload),
 			}
 			userSettingConfig = append(userSettingConfig, config)
 		}
 		if configAttributes["copy_from_local"] != nil {
 			config := &appstream.UserSetting{
-				Action: aws.String("CLIPBOARD_COPY_FROM_LOCAL_DEVICE"),
+				Action:     aws.String("CLIPBOARD_COPY_FROM_LOCAL_DEVICE"),
 				Permission: aws.String(configCopyFromLocal),
 			}
 			userSettingConfig = append(userSettingConfig, config)
 		}
 		if configAttributes["copy_to_local"] != nil {
 			config := &appstream.UserSetting{
-				Action: aws.String("CLIPBOARD_COPY_TO_LOCAL_DEVICE"),
+				Action:     aws.String("CLIPBOARD_COPY_TO_LOCAL_DEVICE"),
 				Permission: aws.String(configCopytoLocal),
 			}
 			userSettingConfig = append(userSettingConfig, config)
 		}
 		if configAttributes["allow_local_device_printing"] != nil {
 			config := &appstream.UserSetting{
-				Action: aws.String("PRINTING_TO_LOCAL_DEVICE"),
+				Action:     aws.String("PRINTING_TO_LOCAL_DEVICE"),
 				Permission: aws.String(configAllowLocalPrint),
 			}
 			userSettingConfig = append(userSettingConfig, config)

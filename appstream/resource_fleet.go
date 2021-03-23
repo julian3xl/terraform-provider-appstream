@@ -1,14 +1,14 @@
 package appstream
 
 import (
-        "github.com/aws/aws-sdk-go/aws"
-        "github.com/aws/aws-sdk-go/service/appstream"
-        "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-    	"log"
+	"log"
 	"strings"
 	"time"
-)
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+)
 
 func resourceAppstreamFleet() *schema.Resource {
 	return &schema.Resource {
@@ -81,7 +81,7 @@ func resourceAppstreamFleet() *schema.Resource {
 				Required:     true,
 				ForceNew:	  true,
 			},
-			
+
 			"iam_role_arn": {
                 Type:         schema.TypeString,
 				Required:     true,
@@ -147,7 +147,6 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	ComputeConfig := &appstream.ComputeCapacity{}
-
 	if a, ok := d.GetOk("compute_capacity"); ok {
 		ComputeAttributes := a.([]interface{})
 		attr := ComputeAttributes[0].(map[string]interface{})
@@ -156,7 +155,6 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 		CreateFleetInputOpts.ComputeCapacity = ComputeConfig
 	}
-
 
 	if v, ok := d.GetOk("description"); ok {
 		CreateFleetInputOpts.Description = aws.String(v.(string))
@@ -171,7 +169,6 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	DomainJoinInfoConfig := &appstream.DomainJoinInfo{}
-
 	if dom, ok := d.GetOk("domain_info"); ok {
 		DomainAttributes := dom.([]interface{})
 		attr := DomainAttributes[0].(map[string]interface{})
@@ -196,10 +193,9 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 		CreateFleetInputOpts.ImageArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("iam_role_arn"); ok {
-		CreateFleetInputOpts.IamRoleArn  = aws.String(v.(string))
+	if v, ok := d.GetOk("image_name"); ok {
+		CreateFleetInputOpts.ImageName = aws.String(v.(string))
 	}
-
 
 	if v, ok := d.GetOk("instance_type"); ok {
 		CreateFleetInputOpts.InstanceType = aws.String(v.(string))
@@ -212,24 +208,24 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 	VpcConfigConfig := & appstream.VpcConfig{}
 
 	if vpc, ok := d.GetOk("vpc_config"); ok {
-        	VpcAttributes := vpc.([]interface{})
-        	attr := VpcAttributes[0].(map[string]interface{})
-        	if v, ok := attr["security_group_ids"]; ok {
-            		strSlice := strings.Split(v.(string), ",")
-                	for i, s := range strSlice {
-		    		strSlice[i] = strings.TrimSpace(s)
+		VpcAttributes := vpc.([]interface{})
+		attr := VpcAttributes[0].(map[string]interface{})
+		if v, ok := attr["security_group_ids"]; ok {
+			strSlice := strings.Split(v.(string), ",")
+			for i, s := range strSlice {
+				strSlice[i] = strings.TrimSpace(s)
 			}
-            		VpcConfigConfig.SecurityGroupIds = aws.StringSlice(strSlice)
-        	}
-        	if v, ok := attr["subnet_ids"]; ok {
-            		strSlice := strings.Split(v.(string), ",")
-                	for i, s := range strSlice {
-		    		strSlice[i] = strings.TrimSpace(s)
+			VpcConfigConfig.SecurityGroupIds = aws.StringSlice(strSlice)
+		}
+		if v, ok := attr["subnet_ids"]; ok {
+			strSlice := strings.Split(v.(string), ",")
+			for i, s := range strSlice {
+				strSlice[i] = strings.TrimSpace(s)
 			}
-            		VpcConfigConfig.SubnetIds = aws.StringSlice(strSlice)
-    		}
-        	CreateFleetInputOpts.VpcConfig = VpcConfigConfig
-    	}
+			VpcConfigConfig.SubnetIds = aws.StringSlice(strSlice)
+		}
+		CreateFleetInputOpts.VpcConfig = VpcConfigConfig
+	}
 
 	log.Printf("[DEBUG] Run configuration: %s", CreateFleetInputOpts)
 	resp, err := svc.CreateFleet(CreateFleetInputOpts)
@@ -248,36 +244,35 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 		attr := make(map[string]string)
 
 		for k, v := range data_tags {
-		    attr[k] = v.(string)
+			attr[k] = v.(string)
 		}
 
 		tags := aws.StringMap(attr)
 
 		fleet_name := aws.StringValue(CreateFleetInputOpts.Name)
-		get, err := svc.DescribeFleets(&appstream.DescribeFleetsInput {
-		    Names:   aws.StringSlice([]string{fleet_name}),
+		get, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
+			Names: aws.StringSlice([]string{fleet_name}),
 		})
 		if err != nil {
-		    log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
-		    return err
+			log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
+			return err
 		}
 		if get.Fleets == nil {
-		    log.Printf("[DEBUG] Apsstream Fleet (%s) not found", d.Id())
+			log.Printf("[DEBUG] Apsstream Fleet (%s) not found", d.Id())
 		}
 
 		fleetArn := get.Fleets[0].Arn
 
 		tag, err := svc.TagResource(&appstream.TagResourceInput{
-		    ResourceArn:    fleetArn,
-		    Tags:           tags,
+			ResourceArn: fleetArn,
+			Tags:        tags,
 		})
 		if err != nil {
-		    log.Printf("[ERROR] Error tagging Appstream Stack: %s", err)
-		    return err
+			log.Printf("[ERROR] Error tagging Appstream Stack: %s", err)
+			return err
 		}
 		log.Printf("[DEBUG] %s", tag)
 	}
-
 
 	if v, ok := d.GetOk("stack_name"); ok {
 		AssociateFleetInputOpts := &appstream.AssociateFleetInput{}
@@ -307,23 +302,23 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 
 			for {
 
-			    resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
-				Names:  aws.StringSlice([]string{*CreateFleetInputOpts.Name}),
-			    })
+				resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
+					Names: aws.StringSlice([]string{*CreateFleetInputOpts.Name}),
+				})
 
-			    if err != nil {
-				log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
-				return err
-			    }
+				if err != nil {
+					log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
+					return err
+				}
 
-			    curr_state := resp.Fleets[0].State
-			    if aws.StringValue(curr_state) == desired_state{
-				break
-			    }
-			    if aws.StringValue(curr_state) != desired_state {
-				time.Sleep(20 * time.Second)
-				continue
-			    }
+				curr_state := resp.Fleets[0].State
+				if aws.StringValue(curr_state) == desired_state {
+					break
+				}
+				if aws.StringValue(curr_state) != desired_state {
+					time.Sleep(20 * time.Second)
+					continue
+				}
 
 			}
 		}
@@ -373,17 +368,16 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 				d.Set("vpc_config", vpc_attr)
 			}
 			tg, err := svc.ListTagsForResource(&appstream.ListTagsForResourceInput{
-        			ResourceArn: v.Arn,
-    			})
-    			if err != nil {
+				ResourceArn: v.Arn,
+			})
+			if err != nil {
 				log.Printf("[ERROR] Error listing stack tags: %s", err)
 				return err
-    			}
+			}
 			if tg.Tags == nil {
 				log.Printf("[DEBUG] Apsstream Stack tags (%s) not found", d.Id())
 				return nil
 			}
-
 			if len(tg.Tags) > 0 {
 				tags_attr := make(map[string]string)
 				tags := tg.Tags
@@ -399,7 +393,9 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 
 		}
 	}
+
 	d.SetId("")
+
 	return nil
 }
 
@@ -441,7 +437,7 @@ func resourceAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) erro
         image_arn :=d.Get("image_arn").(string)
         UpdateFleetInputOpts.ImageArn = aws.String(image_arn)
 	}
-	
+
 	if d.HasChange("iam_role_arn") {
         d.SetPartial("iam_role_arn")
         log.Printf("[DEBUG] Modify Fleet")
@@ -532,65 +528,63 @@ func resourceAppstreamFleetDelete(d *schema.ResourceData, meta interface{}) erro
 
 	svc := meta.(*AWSClient).appstreamconn
 
-    resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
-	    Names: aws.StringSlice([]string{*aws.String(d.Id())}),
-    })
+	resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
+		Names: aws.StringSlice([]string{*aws.String(d.Id())}),
+	})
 
-    if err != nil {
-	log.Printf("[ERROR] Error reading Appstream Fleet: %s", err)
-	return err
-    }
+	if err != nil {
+		log.Printf("[ERROR] Error reading Appstream Fleet: %s", err)
+		return err
+	}
 
-    curr_state := aws.StringValue(resp.Fleets[0].State)
+	curr_state := aws.StringValue(resp.Fleets[0].State)
 
-    if  curr_state == "RUNNING" {
-	    desired_state := "STOPPED"
-	    svc.StopFleet(&appstream.StopFleetInput{
-		    Name: aws.String(d.Id()),
-	    })
-	    for {
+	if curr_state == "RUNNING" {
+		desired_state := "STOPPED"
+		svc.StopFleet(&appstream.StopFleetInput{
+			Name: aws.String(d.Id()),
+		})
+		for {
 
-		    resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
-			Names:  aws.StringSlice([]string{*aws.String(d.Id())}),
-		    })
-		    if err != nil {
-			log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
-			return err
-		    }
+			resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
+				Names: aws.StringSlice([]string{*aws.String(d.Id())}),
+			})
+			if err != nil {
+				log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
+				return err
+			}
 
-		    curr_state := resp.Fleets[0].State
-		    if aws.StringValue(curr_state) == desired_state{
-			break
-		    }
-		    if aws.StringValue(curr_state) != desired_state {
-			time.Sleep(20 * time.Second)
-			continue
-		    }
+			curr_state := resp.Fleets[0].State
+			if aws.StringValue(curr_state) == desired_state {
+				break
+			}
+			if aws.StringValue(curr_state) != desired_state {
+				time.Sleep(20 * time.Second)
+				continue
+			}
 
-	    }
+		}
 
-    }
+	}
 
+	dis, err := svc.DisassociateFleet(&appstream.DisassociateFleetInput{
+		FleetName: aws.String(d.Id()),
+		StackName: aws.String(d.Get("stack_name").(string)),
+	})
+	if err != nil {
+		log.Printf("[ERROR] Error deleting Appstream Fleet: %s", err)
+		return err
+	}
+	log.Printf("[DEBUG] %s", dis)
 
-
-    dis, err := svc.DisassociateFleet(&appstream.DisassociateFleetInput{
-	    FleetName: aws.String(d.Id()),
-	    StackName: aws.String(d.Get("stack_name").(string)),
-    })
-    if err != nil {
-        log.Printf("[ERROR] Error deleting Appstream Fleet: %s", err)
-	return err
-    }
-    log.Printf("[DEBUG] %s", dis)
-
-    del, err := svc.DeleteFleet(&appstream.DeleteFleetInput{
-        Name:   aws.String(d.Id()),
-    })
-    if err != nil {
-        log.Printf("[ERROR] Error deleting Appstream Fleet: %s", err)
-	return err
-    }
-    log.Printf("[DEBUG] %s", del)
-    return nil
+	del, err := svc.DeleteFleet(&appstream.DeleteFleetInput{
+		Name: aws.String(d.Id()),
+	})
+	if err != nil {
+		log.Printf("[ERROR] Error deleting Appstream Fleet: %s", err)
+		return err
+	}
+	log.Printf("[DEBUG] %s", del)
+	return nil
 
 }

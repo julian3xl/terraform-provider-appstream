@@ -1,14 +1,15 @@
 package appstream
 
 import (
-        "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	homedir "github.com/mitchellh/go-homedir"
-	"log"
 )
 
 func Provider() terraform.ResourceProvider {
-	
+
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"access_key": {
@@ -61,9 +62,9 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-		    "appstream_stack":  		resourceAppstreamStack(),
-		    "appstream_image_builder":  resourceAppstreamImageBuilder(),
-		    "appstream_fleet":			resourceAppstreamFleet(),
+			"appstream_stack":         resourceAppstreamStack(),
+			"appstream_image_builder": resourceAppstreamImageBuilder(),
+			"appstream_fleet":         resourceAppstreamFleet(),
 		},
 	}
 	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
@@ -143,12 +144,12 @@ func init() {
 	}
 }
 func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
-	config := Config {
-        AccessKey:  d.Get("access_key").(string),
-		SecretKey:  d.Get("secret_key").(string),
-		Profile:    d.Get("profile").(string),
-		Token:      d.Get("token").(string),
-		Region:     d.Get("region").(string),
+	config := Config{
+		AccessKey:        d.Get("access_key").(string),
+		SecretKey:        d.Get("secret_key").(string),
+		Profile:          d.Get("profile").(string),
+		Token:            d.Get("token").(string),
+		Region:           d.Get("region").(string),
 		terraformVersion: terraformVersion,
 	}
 
