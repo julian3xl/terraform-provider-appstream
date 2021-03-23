@@ -11,140 +11,153 @@ import (
 )
 
 func resourceAppstreamFleet() *schema.Resource {
-	return &schema.Resource {
-        Create: resourceAppstreamFleetCreate,
-        Read:   resourceAppstreamFleetRead,
-        Update: resourceAppstreamFleetUpdate,
-        Delete: resourceAppstreamFleetDelete,
-        Importer: &schema.ResourceImporter {
-            State: schema.ImportStatePassthrough,
-        },
+	return &schema.Resource{
+		Create: resourceAppstreamFleetCreate,
+		Read:   resourceAppstreamFleetRead,
+		Update: resourceAppstreamFleetUpdate,
+		Delete: resourceAppstreamFleetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
-        Schema: map[string]*schema.Schema{
-            "compute_capacity": {
-                Type:         schema.TypeList,
-                Required:     true,
-                Elem:         &schema.Resource{
-                    Schema: map[string]*schema.Schema{
-                        "desired_instances": {
-                            Type:       schema.TypeInt,
-                            Required:   true,
-                        },
-                    },
-                },
-            },
+		Schema: map[string]*schema.Schema{
+			"compute_capacity": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"desired_instances": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
+			},
 
-            "description": {
-                Type:         schema.TypeString,
-                Optional:     true,
-            },
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 
-            "disconnect_timeout": {
-                Type:         schema.TypeInt,
-                Optional:     true,
-            },
+			"disconnect_timeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 
-            "display_name": {
-                Type:         schema.TypeString,
-                Optional:     true,
-            },
+			"display_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 
-            "domain_info": {
-                Type:         schema.TypeList,
-                Optional:     true,
-                Elem:         &schema.Resource{
-                    Schema: map[string]*schema.Schema{
-                        "directory_name": {
-                            Type:       schema.TypeString,
-                            Optional:   true,
-                        },
-                        "organizational_unit_distinguished_name": {
-                            Type:       schema.TypeString,
-                            Optional:   true,
-                        },
-                    },
-                },
-            },
+			"domain_info": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"directory_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"organizational_unit_distinguished_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 
-            "enable_default_internet_access": {
-                Type:         schema.TypeBool,
-                Optional:     true,
-            },
+			"enable_default_internet_access": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 
-            "fleet_type": {
-                Type:         schema.TypeString,
-                Optional:     true,
-            },
-			
-			"image_arn": {
-                Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:	  true,
+			"fleet_type": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
 			"iam_role_arn": {
-                Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:	  true,
-            },
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 
-            "instance_type": {
-                Type:         schema.TypeString,
-                Required:     true,
-            },
+			"idle_disconnect_timeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 
-            "max_user_duration": {
-                Type:         schema.TypeInt,
-                Optional:     true,
-            },
+			"image_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 
-            "name": {
-                Type:       schema.TypeString,
-                Required:   true,
-            },
+			"image_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 
-	    "stack_name": {
-                Type:       schema.TypeString,
-                Optional:   true,
-            },
+			"instance_type": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 
-	    "state": {
-		    Type:	schema.TypeString,
-		    Optional:	true,
-	    },
+			"max_user_duration": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 
-            "vpc_config": {
-                Type:         schema.TypeList,
-                Optional:     true,
-                Elem:         &schema.Resource {
-                    Schema: map[string]*schema.Schema {
-                        "security_group_ids": {
-                            Type:       schema.TypeString,
-                            Optional:   true,
-                        },
-                        "subnet_ids":   {
-                            Type:       schema.TypeString,
-                            Optional:   true,
-                        },
-                    },
-                },
-            },
-	    "tags": {
-		    Type:	schema.TypeMap,
-		    Optional:	true,
-	    },
-        },
-    }
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			"stack_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"stream_view": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "APP",
+			},
+
+			"tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+			},
+
+			"vpc_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	svc := meta.(*AWSClient).appstreamconn
 	CreateFleetInputOpts := &appstream.CreateFleetInput{}
-
-	if v, ok := d.GetOk("name"); ok {
-		CreateFleetInputOpts.Name = aws.String(v.(string))
-	}
 
 	ComputeConfig := &appstream.ComputeCapacity{}
 	if a, ok := d.GetOk("compute_capacity"); ok {
@@ -189,6 +202,14 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 		CreateFleetInputOpts.FleetType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("iam_role_arn"); ok {
+		CreateFleetInputOpts.IamRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("idle_disconnect_timeout"); ok {
+		CreateFleetInputOpts.IdleDisconnectTimeoutInSeconds = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("image_arn"); ok {
 		CreateFleetInputOpts.ImageArn = aws.String(v.(string))
 	}
@@ -205,24 +226,23 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 		CreateFleetInputOpts.MaxUserDurationInSeconds = aws.Int64(int64(v.(int)))
 	}
 
-	VpcConfigConfig := & appstream.VpcConfig{}
+	if v, ok := d.GetOk("name"); ok {
+		CreateFleetInputOpts.Name = aws.String(v.(string))
+	}
 
+	if v, ok := d.GetOk("stream_view"); ok {
+		CreateFleetInputOpts.StreamView = aws.String(v.(string))
+	}
+
+	VpcConfigConfig := &appstream.VpcConfig{}
 	if vpc, ok := d.GetOk("vpc_config"); ok {
 		VpcAttributes := vpc.([]interface{})
 		attr := VpcAttributes[0].(map[string]interface{})
 		if v, ok := attr["security_group_ids"]; ok {
-			strSlice := strings.Split(v.(string), ",")
-			for i, s := range strSlice {
-				strSlice[i] = strings.TrimSpace(s)
-			}
-			VpcConfigConfig.SecurityGroupIds = aws.StringSlice(strSlice)
+			VpcConfigConfig.SecurityGroupIds = expandStringSet(v.(*schema.Set))
 		}
 		if v, ok := attr["subnet_ids"]; ok {
-			strSlice := strings.Split(v.(string), ",")
-			for i, s := range strSlice {
-				strSlice[i] = strings.TrimSpace(s)
-			}
-			VpcConfigConfig.SubnetIds = aws.StringSlice(strSlice)
+			VpcConfigConfig.SubnetIds = expandStringSet(v.(*schema.Set))
 		}
 		CreateFleetInputOpts.VpcConfig = VpcConfigConfig
 	}
@@ -341,8 +361,6 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 	for _, v := range resp.Fleets {
 		if aws.StringValue(v.Name) == d.Get("name") {
 
-			d.Set("name", v.Name)
-
 			if v.ComputeCapacityStatus != nil {
 				comp_attr := map[string]interface{}{}
 				comp_attr["desired_instances"] = aws.Int64Value(v.ComputeCapacityStatus.Desired)
@@ -350,23 +368,27 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 			}
 
 			d.Set("description", v.Description)
-			d.Set("display_name", v.DisplayName)
 			d.Set("disconnect_timeout", v.DisconnectTimeoutInSeconds)
+			d.Set("display_name", v.DisplayName)
+
+			if v.DomainJoinInfo != nil {
+				comp_attr := map[string]interface{}{}
+				comp_attr["directory_name"] = v.DomainJoinInfo.DirectoryName
+				comp_attr["organizational_unit_distinguished_name"] = v.DomainJoinInfo.OrganizationalUnitDistinguishedName
+				d.Set("domain_info", comp_attr)
+			}
+
 			d.Set("enable_default_internet_access", v.EnableDefaultInternetAccess)
 			d.Set("fleet_type", v.FleetType)
-			d.Set("image_arn", v.ImageArn)
 			d.Set("iam_role_arn", v.IamRoleArn)
+			d.Set("idle_disconnect_timeout", v.IdleDisconnectTimeoutInSeconds)
+			d.Set("image_arn", v.ImageArn)
+			d.Set("image_name", v.ImageName)
 			d.Set("instance_type", v.InstanceType)
 			d.Set("max_user_duration", v.MaxUserDurationInSeconds)
+			d.Set("name", v.Name)
+			d.Set("stream_view", v.StreamView)
 
-			if v.VpcConfig != nil {
-				vpc_attr := map[string]interface{}{}
-				vpc_config_sg := aws.StringValueSlice(v.VpcConfig.SecurityGroupIds)
-				vpc_config_sub := aws.StringValueSlice(v.VpcConfig.SubnetIds)
-				vpc_attr["security_group_ids"] = aws.String(strings.Join(vpc_config_sg, ","))
-				vpc_attr["subnet_ids"] = aws.String(strings.Join(vpc_config_sub, ","))
-				d.Set("vpc_config", vpc_attr)
-			}
 			tg, err := svc.ListTagsForResource(&appstream.ListTagsForResourceInput{
 				ResourceArn: v.Arn,
 			})
@@ -387,6 +409,15 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 				d.Set("tags", tags_attr)
 			}
 
+			if v.VpcConfig != nil {
+				vpc_attr := map[string]interface{}{}
+				vpc_config_sg := aws.StringValueSlice(v.VpcConfig.SecurityGroupIds)
+				vpc_config_sub := aws.StringValueSlice(v.VpcConfig.SubnetIds)
+				vpc_attr["security_group_ids"] = aws.String(strings.Join(vpc_config_sg, ","))
+				vpc_attr["subnet_ids"] = aws.String(strings.Join(vpc_config_sub, ","))
+				d.Set("vpc_config", vpc_attr)
+			}
+
 			d.Set("state", v.State)
 
 			return nil
@@ -402,125 +433,153 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	svc := meta.(*AWSClient).appstreamconn
-    UpdateFleetInputOpts := &appstream.UpdateFleetInput{}
+	UpdateFleetInputOpts := &appstream.UpdateFleetInput{}
 
-    d.Partial(true)
+	d.Partial(true)
 
-    if v, ok := d.GetOk("name"); ok {
-        UpdateFleetInputOpts.Name = aws.String(v.(string))
-    }
+	if d.HasChange("description") {
+		d.SetPartial("description")
+		log.Printf("[DEBUG] Modify Fleet")
+		description := d.Get("description").(string)
+		UpdateFleetInputOpts.Description = aws.String(description)
+	}
 
-    if d.HasChange("description") {
-    	d.SetPartial("description")
-        log.Printf("[DEBUG] Modify Fleet")
-        description :=d.Get("description").(string)
-        UpdateFleetInputOpts.Description = aws.String(description)
-    }
+	if d.HasChange("disconnect_timeout") {
+		d.SetPartial("disconnect_timeout")
+		log.Printf("[DEBUG] Modify Fleet")
+		disconnect_timeout := d.Get("disconnect_timeout").(int)
+		UpdateFleetInputOpts.DisconnectTimeoutInSeconds = aws.Int64(int64(disconnect_timeout))
+	}
 
-    if d.HasChange("disconnect_timeout") {
-        d.SetPartial("disconnect_timeout")
-        log.Printf("[DEBUG] Modify Fleet")
-        disconnect_timeout := d.Get("disconnect_timeout").(int)
-        UpdateFleetInputOpts.DisconnectTimeoutInSeconds = aws.Int64(int64(disconnect_timeout))
-    }
+	if d.HasChange("display_name") {
+		d.SetPartial("display_name")
+		log.Printf("[DEBUG] Modify Fleet")
+		display_name := d.Get("display_name").(string)
+		UpdateFleetInputOpts.DisplayName = aws.String(display_name)
+	}
 
-    if d.HasChange("display_name") {
-        d.SetPartial("display_name")
-        log.Printf("[DEBUG] Modify Fleet")
-        display_name :=d.Get("display_name").(string)
-        UpdateFleetInputOpts.DisplayName = aws.String(display_name)
-    }
-
-	if d.HasChange("image_arn") {
-        d.SetPartial("image_arn")
-        log.Printf("[DEBUG] Modify Fleet")
-        image_arn :=d.Get("image_arn").(string)
-        UpdateFleetInputOpts.ImageArn = aws.String(image_arn)
+	if d.HasChange("enable_default_internet_access") {
+		d.SetPartial("enable_default_internet_access")
+		log.Printf("[DEBUG] Modify Fleet")
+		enable_default_internet_access := d.Get("enable_default_internet_access").(bool)
+		UpdateFleetInputOpts.EnableDefaultInternetAccess = aws.Bool(enable_default_internet_access)
 	}
 
 	if d.HasChange("iam_role_arn") {
-        d.SetPartial("iam_role_arn")
-        log.Printf("[DEBUG] Modify Fleet")
-        iam_role_arn :=d.Get("iam_role_arn").(string)
-        UpdateFleetInputOpts.IamRoleArn = aws.String(iam_role_arn)
-    }
+		d.SetPartial("iam_role_arn")
+		log.Printf("[DEBUG] Modify Fleet")
+		iam_role_arn := d.Get("iam_role_arn").(string)
+		UpdateFleetInputOpts.IamRoleArn = aws.String(iam_role_arn)
+	}
 
-    if d.HasChange("instance_type") {
-        d.SetPartial("instance_type")
-        log.Printf("[DEBUG] Modify Fleet")
-        instance_type := d.Get("instance_type").(string)
-        UpdateFleetInputOpts.InstanceType = aws.String(instance_type)
-    }
+	if d.HasChange("idle_disconnect_timeout") {
+		d.SetPartial("idle_disconnect_timeout")
+		log.Printf("[DEBUG] Modify Fleet")
+		idle_disconnect_timeout_in_seconds := d.Get("idle_disconnect_timeout").(int)
+		UpdateFleetInputOpts.IdleDisconnectTimeoutInSeconds = aws.Int64(int64(idle_disconnect_timeout_in_seconds))
+	}
 
-    if d.HasChange("max_user_duration") {
-        d.SetPartial("max_user_duration")
-        log.Printf("[DEBUG] Modify Fleet")
-        max_user_duration :=d.Get("max_user_duration").(int)
-        UpdateFleetInputOpts.MaxUserDurationInSeconds = aws.Int64(int64(max_user_duration))
-    }
+	if d.HasChange("image_arn") {
+		d.SetPartial("image_arn")
+		log.Printf("[DEBUG] Modify Fleet")
+		image_arn := d.Get("image_arn").(string)
+		UpdateFleetInputOpts.ImageArn = aws.String(image_arn)
+	}
 
-    resp, err := svc.UpdateFleet(UpdateFleetInputOpts)
+	if d.HasChange("image_name") {
+		d.SetPartial("image_name")
+		log.Printf("[DEBUG] Modify Fleet")
+		image_name := d.Get("image_name").(string)
+		UpdateFleetInputOpts.ImageName = aws.String(image_name)
+	}
 
-    if err != nil {
-        log.Printf("[ERROR] Error updating Appstream Fleet: %s", err)
-	return err
-    }
-    log.Printf("[DEBUG] %s", resp)
-    desired_state := d.Get("state")
-    if d.HasChange("state") {
-        d.SetPartial("state")
-	if desired_state == "STOPPED" {
-            svc.StopFleet(&appstream.StopFleetInput{
-		    Name: aws.String(d.Id()),
-	    })
-	    for {
+	if d.HasChange("instance_type") {
+		d.SetPartial("instance_type")
+		log.Printf("[DEBUG] Modify Fleet")
+		instance_type := d.Get("instance_type").(string)
+		UpdateFleetInputOpts.InstanceType = aws.String(instance_type)
+	}
 
-		    resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
-			Names:  aws.StringSlice([]string{*UpdateFleetInputOpts.Name}),
-		    })
-		    if err != nil {
-			log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
-			return err
-		    }
+	if d.HasChange("max_user_duration") {
+		d.SetPartial("max_user_duration")
+		log.Printf("[DEBUG] Modify Fleet")
+		max_user_duration := d.Get("max_user_duration").(int)
+		UpdateFleetInputOpts.MaxUserDurationInSeconds = aws.Int64(int64(max_user_duration))
+	}
 
-		    curr_state := resp.Fleets[0].State
-		    if aws.StringValue(curr_state) == desired_state{
-			break
-		    }
-		    if aws.StringValue(curr_state) != desired_state {
-			time.Sleep(20 * time.Second)
-			continue
-		    }
+	if v, ok := d.GetOk("name"); ok {
+		UpdateFleetInputOpts.Name = aws.String(v.(string))
+	}
 
-	    }
-        } else if desired_state == "RUNNING" {
-            svc.StartFleet(&appstream.StartFleetInput{
-		    Name: aws.String(d.Id()),
-	    })
-	    for {
+	if d.HasChange("stream_view") {
+		d.SetPartial("stream_view")
+		log.Printf("[DEBUG] Modify Fleet")
+		stream_view := d.Get("stream_view").(string)
+		UpdateFleetInputOpts.StreamView = aws.String(stream_view)
+	}
 
-		    resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
-			Names:  aws.StringSlice([]string{*UpdateFleetInputOpts.Name}),
-		    })
-		    if err != nil {
-			log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
-			return err
-		    }
+	resp, err := svc.UpdateFleet(UpdateFleetInputOpts)
 
-		    curr_state := resp.Fleets[0].State
-		    if aws.StringValue(curr_state) == desired_state{
-			break
-		    }
-		    if aws.StringValue(curr_state) != desired_state {
-			time.Sleep(20 * time.Second)
-			continue
-		    }
+	if err != nil {
+		log.Printf("[ERROR] Error updating Appstream Fleet: %s", err)
+		return err
+	}
+	log.Printf("[DEBUG] %s", resp)
+	desired_state := d.Get("state")
+	if d.HasChange("state") {
+		d.SetPartial("state")
+		if desired_state == "STOPPED" {
+			svc.StopFleet(&appstream.StopFleetInput{
+				Name: aws.String(d.Id()),
+			})
+			for {
 
-	    }
-        }
-    }
-    d.Partial(false)
-    return resourceAppstreamFleetRead(d, meta)
+				resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
+					Names: aws.StringSlice([]string{*UpdateFleetInputOpts.Name}),
+				})
+				if err != nil {
+					log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
+					return err
+				}
+
+				curr_state := resp.Fleets[0].State
+				if aws.StringValue(curr_state) == desired_state {
+					break
+				}
+				if aws.StringValue(curr_state) != desired_state {
+					time.Sleep(20 * time.Second)
+					continue
+				}
+
+			}
+		} else if desired_state == "RUNNING" {
+			svc.StartFleet(&appstream.StartFleetInput{
+				Name: aws.String(d.Id()),
+			})
+			for {
+
+				resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
+					Names: aws.StringSlice([]string{*UpdateFleetInputOpts.Name}),
+				})
+				if err != nil {
+					log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
+					return err
+				}
+
+				curr_state := resp.Fleets[0].State
+				if aws.StringValue(curr_state) == desired_state {
+					break
+				}
+				if aws.StringValue(curr_state) != desired_state {
+					time.Sleep(20 * time.Second)
+					continue
+				}
+
+			}
+		}
+	}
+	d.Partial(false)
+	return resourceAppstreamFleetRead(d, meta)
 
 }
 

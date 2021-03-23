@@ -20,6 +20,40 @@ func resourceAppstreamStack() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"access_endpoints": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"endpoint_type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"vpce_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+
+			"application_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"settings_group": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -28,6 +62,14 @@ func resourceAppstreamStack() *schema.Resource {
 			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+
+			"embed_host_domains": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 
 			"feedback_url": {
@@ -54,6 +96,17 @@ func resourceAppstreamStack() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"domains": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"resource_identifier": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -68,25 +121,13 @@ func resourceAppstreamStack() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"file_download":{
-							Type: schema.TypeString,
-							Optional: true,
+						"action": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
-						"file_upload":{
-							Type: schema.TypeString,
-							Optional: true,
-						},
-						"copy_from_local": {
-							Type: schema.TypeString,
-							Optional: true,
-						},
-						"copy_to_local": {
-							Type: schema.TypeString,
-							Optional: true,
-						},
-						"allow_local_device_printing": {
-							Type: schema.TypeString,
-							Optional: true,
+						"permission": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
