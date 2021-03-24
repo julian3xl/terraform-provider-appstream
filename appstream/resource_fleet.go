@@ -86,6 +86,7 @@ func resourceAppstreamFleet() *schema.Resource {
 				Optional: true,
 			},
 
+			// TO-BE-REPAIRED: there is some inconsistency between sdk and api that makes it messy right now
 			//"image_arn": {
 			//	Type:          schema.TypeString,
 			//	Optional:      true,
@@ -111,11 +112,6 @@ func resourceAppstreamFleet() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-
-			"stack_name": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 
 			"state": {
@@ -282,22 +278,6 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		log.Printf("[DEBUG] %s", tag)
-	}
-
-	log.Printf("[DEBUG] %s", resp)
-
-	if v, ok := d.GetOk("stack_name"); ok {
-		AssociateFleetInputOpts := &appstream.AssociateFleetInput{}
-		AssociateFleetInputOpts.FleetName = CreateFleetInputOpts.Name
-		AssociateFleetInputOpts.StackName = aws.String(v.(string))
-
-		resp, err := svc.AssociateFleet(AssociateFleetInputOpts)
-		if err != nil {
-			log.Printf("[ERROR] Error associating Appstream Fleet: %s", err)
-			return err
-		}
-
-		log.Printf("[DEBUG] %s", resp)
 	}
 
 	if v, ok := d.GetOk("state"); ok {
@@ -472,6 +452,7 @@ func resourceAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) erro
 		UpdateFleetInputOpts.IdleDisconnectTimeoutInSeconds = aws.Int64(int64(idle_disconnect_timeout_in_seconds))
 	}
 
+	// TO-BE-REPAIRED: there is some inconsistency between sdk and api that makes it hard right now
 	//if d.HasChange("image_arn") {
 	//	d.SetPartial("image_arn")
 	//	log.Printf("[DEBUG] Modify Fleet")
@@ -519,20 +500,6 @@ func resourceAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Appstream Fleet updated %s ", resp)
 
-	if v, ok := d.GetOk("stack_name"); ok && d.HasChange("stack_name") {
-		AssociateFleetInputOpts := &appstream.AssociateFleetInput{}
-		AssociateFleetInputOpts.FleetName = UpdateFleetInputOpts.Name
-		AssociateFleetInputOpts.StackName = aws.String(v.(string))
-
-		resp, err := svc.AssociateFleet(AssociateFleetInputOpts)
-		if err != nil {
-			log.Printf("[ERROR] Error associating Appstream Fleet: %s", err)
-			return err
-		}
-
-		log.Printf("[DEBUG] %s", resp)
-	}
-
 	if v, ok := d.GetOk("tags"); ok && d.HasChange("tags") {
 		time.Sleep(2 * time.Second)
 
@@ -562,8 +529,6 @@ func resourceAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		log.Printf("[DEBUG] %s", tag)
 	}
-
-	log.Printf("[DEBUG] %s", resp)
 
 	desired_state := d.Get("state")
 	if d.HasChange("state") {
@@ -665,18 +630,6 @@ func resourceAppstreamFleetDelete(d *schema.ResourceData, meta interface{}) erro
 				continue
 			}
 		}
-	}
-
-	if v, ok := d.GetOk("stack_name"); ok {
-		dis, err := svc.DisassociateFleet(&appstream.DisassociateFleetInput{
-			FleetName: aws.String(d.Id()),
-			StackName: aws.String(v.(string)),
-		})
-		if err != nil {
-			log.Printf("[ERROR] Error deleting Appstream Fleet: %s", err)
-			return err
-		}
-		log.Printf("[DEBUG] %s", dis)
 	}
 
 	del, err := svc.DeleteFleet(&appstream.DeleteFleetInput{

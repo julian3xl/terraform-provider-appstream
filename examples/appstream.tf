@@ -7,7 +7,7 @@ provider "appstream" {
 }
 
 
-resource "appstream_image_builder" "test-image-builder" {
+resource "appstream_image_builder" "test_image_builder" {
   name                           = "test-image-builder"
   appstream_agent_version        = "LATEST"
   description                    = "test image builder"
@@ -23,7 +23,7 @@ resource "appstream_image_builder" "test-image-builder" {
 }
 
 
-resource "appstream_stack" "test-stack" {
+resource "appstream_stack" "test_stack" {
   name         = "test-stack"
   description  = "appstream test stack"
   display_name = "test-stack"
@@ -38,9 +38,8 @@ resource "appstream_stack" "test-stack" {
   }
 }
 
-resource "appstream_fleet" "test-fleet" {
+resource "appstream_fleet" "test_fleet" {
   name       = "test-fleet"
-  stack_name = appstream_stack.test-stack.name
   compute_capacity {
     desired_instances = 1
   }
@@ -61,4 +60,9 @@ resource "appstream_fleet" "test-fleet" {
     Role = "appstream-fleet"
   }
   state = "RUNNING"
+}
+
+resource "appstream_stack_attachment" "eaglepro" {
+  appstream_stack_id = appstream_stack.test_stack.name
+  appstream_fleet_id = appstream_fleet.test_fleet.name
 }

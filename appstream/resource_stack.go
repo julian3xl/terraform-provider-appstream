@@ -220,8 +220,6 @@ func resourceAppstreamStackCreate(d *schema.ResourceData, meta interface{}) erro
 		log.Printf("[DEBUG] %s", tag)
 	}
 
-	log.Printf("[DEBUG] %s", resp)
-
 	d.SetId(*CreateStackInputOpts.Name)
 
 	return resourceAppstreamStackRead(d, meta)
@@ -440,7 +438,6 @@ func resourceAppstreamStackUpdate(d *schema.ResourceData, meta interface{}) erro
 		log.Printf("[DEBUG] %s", tag)
 	}
 
-	log.Printf("[DEBUG] %s", resp)
 	d.Partial(false)
 
 	return nil

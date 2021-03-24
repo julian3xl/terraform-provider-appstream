@@ -62,9 +62,10 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"appstream_stack":         resourceAppstreamStack(),
-			"appstream_image_builder": resourceAppstreamImageBuilder(),
-			"appstream_fleet":         resourceAppstreamFleet(),
+			"appstream_stack":            resourceAppstreamStack(),
+			"appstream_stack_attachment": resourceAppstreamStackAttachment(),
+			"appstream_image_builder":    resourceAppstreamImageBuilder(),
+			"appstream_fleet":            resourceAppstreamFleet(),
 		},
 	}
 	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
