@@ -157,7 +157,6 @@ func resourceAppstreamFleet() *schema.Resource {
 }
 
 func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) error {
-
 	svc := meta.(*AWSClient).appstreamconn
 	CreateFleetInputOpts := &appstream.CreateFleetInput{}
 
@@ -165,9 +164,11 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 	if a, ok := d.GetOk("compute_capacity"); ok {
 		ComputeAttributes := a.([]interface{})
 		attr := ComputeAttributes[0].(map[string]interface{})
+
 		if v, ok := attr["desired_instances"]; ok {
 			ComputeConfig.DesiredInstances = aws.Int64(int64(v.(int)))
 		}
+
 		CreateFleetInputOpts.ComputeCapacity = ComputeConfig
 	}
 
@@ -187,12 +188,15 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 	if dom, ok := d.GetOk("domain_info"); ok {
 		DomainAttributes := dom.([]interface{})
 		attr := DomainAttributes[0].(map[string]interface{})
+
 		if v, ok := attr["directory_name"]; ok {
 			DomainJoinInfoConfig.DirectoryName = aws.String(v.(string))
 		}
+
 		if v, ok := attr["organizational_unit_distinguished_name"]; ok {
 			DomainJoinInfoConfig.OrganizationalUnitDistinguishedName = aws.String(v.(string))
 		}
+
 		CreateFleetInputOpts.DomainJoinInfo = DomainJoinInfoConfig
 	}
 
@@ -236,70 +240,57 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 		CreateFleetInputOpts.StreamView = aws.String(v.(string))
 	}
 
-	VpcConfigConfig := &appstream.VpcConfig{}
-	if vpc, ok := d.GetOk("vpc_config"); ok {
-		VpcAttributes := vpc.([]interface{})
-		attr := VpcAttributes[0].(map[string]interface{})
-		if v, ok := attr["security_group_ids"]; ok {
-			VpcConfigConfig.SecurityGroupIds = expandStringSet(v.(*schema.Set))
-		}
-		if v, ok := attr["subnet_ids"]; ok {
-			VpcConfigConfig.SubnetIds = expandStringSet(v.(*schema.Set))
-		}
-		CreateFleetInputOpts.VpcConfig = VpcConfigConfig
+	if v, ok := d.GetOk("vpc_config"); ok {
+		CreateFleetInputOpts.VpcConfig = expandVpcConfigs(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Run configuration: %s", CreateFleetInputOpts)
-	resp, err := svc.CreateFleet(CreateFleetInputOpts)
 
+	resp, err := svc.CreateFleet(CreateFleetInputOpts)
 	if err != nil {
 		log.Printf("[ERROR] Error creating Appstream Fleet: %s", err)
 		return err
 	}
 
-	log.Printf("[DEBUG] %s", resp)
-	time.Sleep(2 * time.Second)
+	log.Printf("[DEBUG] Appstream Fleet created %s ", resp)
+
 	if v, ok := d.GetOk("tags"); ok {
-
-		data_tags := v.(map[string]interface{})
-
-		attr := make(map[string]string)
-
-		for k, v := range data_tags {
-			attr[k] = v.(string)
-		}
-
-		tags := aws.StringMap(attr)
+		time.Sleep(2 * time.Second)
 
 		fleet_name := aws.StringValue(CreateFleetInputOpts.Name)
 		get, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
 			Names: aws.StringSlice([]string{fleet_name}),
 		})
+
 		if err != nil {
 			log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
 			return err
 		}
-		if get.Fleets == nil {
-			log.Printf("[DEBUG] Apsstream Fleet (%s) not found", d.Id())
-		}
 
-		fleetArn := get.Fleets[0].Arn
+		if get.Fleets == nil {
+			log.Printf("[DEBUG] Appstream Fleet (%s) not found", d.Id())
+		}
 
 		tag, err := svc.TagResource(&appstream.TagResourceInput{
-			ResourceArn: fleetArn,
-			Tags:        tags,
+			ResourceArn: get.Fleets[0].Arn,
+			Tags:        aws.StringMap(expandTags(v.(map[string]interface{}))),
 		})
+
 		if err != nil {
-			log.Printf("[ERROR] Error tagging Appstream Stack: %s", err)
+			log.Printf("[ERROR] Error tagging Appstream Fleet: %s", err)
 			return err
 		}
+
 		log.Printf("[DEBUG] %s", tag)
 	}
+
+	log.Printf("[DEBUG] %s", resp)
 
 	if v, ok := d.GetOk("stack_name"); ok {
 		AssociateFleetInputOpts := &appstream.AssociateFleetInput{}
 		AssociateFleetInputOpts.FleetName = CreateFleetInputOpts.Name
 		AssociateFleetInputOpts.StackName = aws.String(v.(string))
+
 		resp, err := svc.AssociateFleet(AssociateFleetInputOpts)
 		if err != nil {
 			log.Printf("[ERROR] Error associating Appstream Fleet: %s", err)
@@ -311,7 +302,6 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("state"); ok {
 		if v == "RUNNING" {
-			desired_state := v
 			resp, err := svc.StartFleet(&appstream.StartFleetInput{
 				Name: CreateFleetInputOpts.Name,
 			})
@@ -320,10 +310,10 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 				log.Printf("[ERROR] Error satrting Appstream Fleet: %s", err)
 				return err
 			}
+
 			log.Printf("[DEBUG] %s", resp)
 
 			for {
-
 				resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
 					Names: aws.StringSlice([]string{*CreateFleetInputOpts.Name}),
 				})
@@ -334,14 +324,14 @@ func resourceAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) erro
 				}
 
 				curr_state := resp.Fleets[0].State
-				if aws.StringValue(curr_state) == desired_state {
+				if aws.StringValue(curr_state) == v {
 					break
 				}
-				if aws.StringValue(curr_state) != desired_state {
+
+				if aws.StringValue(curr_state) != v {
 					time.Sleep(20 * time.Second)
 					continue
 				}
-
 			}
 		}
 	}
@@ -355,14 +345,13 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 	svc := meta.(*AWSClient).appstreamconn
 
 	resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{})
-
 	if err != nil {
 		log.Printf("[ERROR] Error reading Appstream Fleet: %s", err)
 		return err
 	}
+
 	for _, v := range resp.Fleets {
 		if aws.StringValue(v.Name) == d.Get("name") {
-
 			if v.ComputeCapacityStatus != nil {
 				comp_attr := map[string]interface{}{}
 				comp_attr["desired_instances"] = aws.Int64Value(v.ComputeCapacityStatus.Desired)
@@ -374,10 +363,10 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 			d.Set("display_name", v.DisplayName)
 
 			if v.DomainJoinInfo != nil {
-				comp_attr := map[string]interface{}{}
-				comp_attr["directory_name"] = v.DomainJoinInfo.DirectoryName
-				comp_attr["organizational_unit_distinguished_name"] = v.DomainJoinInfo.OrganizationalUnitDistinguishedName
-				d.Set("domain_info", comp_attr)
+				dom_attr := map[string]interface{}{}
+				dom_attr["directory_name"] = v.DomainJoinInfo.DirectoryName
+				dom_attr["organizational_unit_distinguished_name"] = v.DomainJoinInfo.OrganizationalUnitDistinguishedName
+				d.Set("domain_info", dom_attr)
 			}
 
 			d.Set("enable_default_internet_access", v.EnableDefaultInternetAccess)
@@ -394,20 +383,24 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 			tg, err := svc.ListTagsForResource(&appstream.ListTagsForResourceInput{
 				ResourceArn: v.Arn,
 			})
+
 			if err != nil {
 				log.Printf("[ERROR] Error listing stack tags: %s", err)
 				return err
 			}
+
 			if tg.Tags == nil {
 				log.Printf("[DEBUG] Apsstream Stack tags (%s) not found", d.Id())
 				return nil
 			}
+
 			if len(tg.Tags) > 0 {
 				tags_attr := make(map[string]string)
 				tags := tg.Tags
 				for k, v := range tags {
 					tags_attr[k] = aws.StringValue(v)
 				}
+
 				d.Set("tags", tags_attr)
 			}
 
@@ -423,7 +416,6 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 			d.Set("state", v.State)
 
 			return nil
-
 		}
 	}
 
@@ -433,7 +425,6 @@ func resourceAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-
 	svc := meta.(*AWSClient).appstreamconn
 	UpdateFleetInputOpts := &appstream.UpdateFleetInput{}
 
@@ -521,24 +512,73 @@ func resourceAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	resp, err := svc.UpdateFleet(UpdateFleetInputOpts)
-
 	if err != nil {
 		log.Printf("[ERROR] Error updating Appstream Fleet: %s", err)
 		return err
 	}
+
+	log.Printf("[DEBUG] Appstream Fleet updated %s ", resp)
+
+	if v, ok := d.GetOk("stack_name"); ok && d.HasChange("stack_name") {
+		AssociateFleetInputOpts := &appstream.AssociateFleetInput{}
+		AssociateFleetInputOpts.FleetName = UpdateFleetInputOpts.Name
+		AssociateFleetInputOpts.StackName = aws.String(v.(string))
+
+		resp, err := svc.AssociateFleet(AssociateFleetInputOpts)
+		if err != nil {
+			log.Printf("[ERROR] Error associating Appstream Fleet: %s", err)
+			return err
+		}
+
+		log.Printf("[DEBUG] %s", resp)
+	}
+
+	if v, ok := d.GetOk("tags"); ok && d.HasChange("tags") {
+		time.Sleep(2 * time.Second)
+
+		fleet_name := aws.StringValue(UpdateFleetInputOpts.Name)
+		get, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
+			Names: aws.StringSlice([]string{fleet_name}),
+		})
+
+		if err != nil {
+			log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
+			return err
+		}
+
+		if get.Fleets == nil {
+			log.Printf("[DEBUG] Appstream Fleet (%s) not found", d.Id())
+		}
+
+		tag, err := svc.TagResource(&appstream.TagResourceInput{
+			ResourceArn: get.Fleets[0].Arn,
+			Tags:        aws.StringMap(expandTags(v.(map[string]interface{}))),
+		})
+
+		if err != nil {
+			log.Printf("[ERROR] Error tagging Appstream Fleet: %s", err)
+			return err
+		}
+
+		log.Printf("[DEBUG] %s", tag)
+	}
+
 	log.Printf("[DEBUG] %s", resp)
+
 	desired_state := d.Get("state")
 	if d.HasChange("state") {
 		d.SetPartial("state")
+
 		if desired_state == "STOPPED" {
 			svc.StopFleet(&appstream.StopFleetInput{
 				Name: aws.String(d.Id()),
 			})
-			for {
 
+			for {
 				resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
 					Names: aws.StringSlice([]string{*UpdateFleetInputOpts.Name}),
 				})
+
 				if err != nil {
 					log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
 					return err
@@ -548,21 +588,22 @@ func resourceAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) erro
 				if aws.StringValue(curr_state) == desired_state {
 					break
 				}
+
 				if aws.StringValue(curr_state) != desired_state {
 					time.Sleep(20 * time.Second)
 					continue
 				}
-
 			}
 		} else if desired_state == "RUNNING" {
 			svc.StartFleet(&appstream.StartFleetInput{
 				Name: aws.String(d.Id()),
 			})
-			for {
 
+			for {
 				resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
 					Names: aws.StringSlice([]string{*UpdateFleetInputOpts.Name}),
 				})
+
 				if err != nil {
 					log.Printf("[ERROR] Error describing Appstream Fleet: %s", err)
 					return err
@@ -572,21 +613,21 @@ func resourceAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) erro
 				if aws.StringValue(curr_state) == desired_state {
 					break
 				}
+
 				if aws.StringValue(curr_state) != desired_state {
 					time.Sleep(20 * time.Second)
 					continue
 				}
-
 			}
 		}
 	}
-	d.Partial(false)
-	return resourceAppstreamFleetRead(d, meta)
 
+	d.Partial(false)
+
+	return resourceAppstreamFleetRead(d, meta)
 }
 
 func resourceAppstreamFleetDelete(d *schema.ResourceData, meta interface{}) error {
-
 	svc := meta.(*AWSClient).appstreamconn
 
 	resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
@@ -623,9 +664,7 @@ func resourceAppstreamFleetDelete(d *schema.ResourceData, meta interface{}) erro
 				time.Sleep(20 * time.Second)
 				continue
 			}
-
 		}
-
 	}
 
 	if v, ok := d.GetOk("stack_name"); ok {
@@ -649,5 +688,4 @@ func resourceAppstreamFleetDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 	log.Printf("[DEBUG] %s", del)
 	return nil
-
 }
